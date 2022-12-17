@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 
@@ -25,6 +26,10 @@ public class RoomLobby extends AppCompatActivity {
     private Button startButton;
 
     // Socket setting
+    Thread listeningForPlayerJoin;
+    ObjectInputStream ois;
+    ObjectOutputStream oos;
+    Socket socket;
     SocketService mBoundService;
     boolean mIsBound = false;
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -33,8 +38,31 @@ public class RoomLobby extends AppCompatActivity {
         public void onServiceConnected(ComponentName name, IBinder service) {
             // TODO Auto-generated method stub
             mBoundService = ((SocketService.LocalBinder)service).getService();
-            mBoundService.listenMatchStart();
+            socket = mBoundService.socket;
+            ois = mBoundService.objectInputStream;
+            oos = mBoundService.objectOutputStream;
+            listeningForPlayerJoin = new Thread() {
+                @Override
+                public void run() {
+                    while(socket.isConnected()) {
+                        try {
+                            String message = (String) ois.readObject();
+                            if (!message.equals("someoneJoined")) {
+                                System.out.println("Unexpected message received: " + message);
+                            } else {
+                                String playerTwoNameFromServer = (String) ois.readObject();
+                                playerTwoName.setText(playerTwoNameFromServer);
+                                playerTwoStatus.setText("(Ready)");
+                                startButton.setEnabled(true);
+                            }
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                }
 
+            };
+            listeningForPlayerJoin.start();
         }
 
         @Override
@@ -68,28 +96,6 @@ public class RoomLobby extends AppCompatActivity {
         roomNumber.setText("0"); // TODO: get real room number from server
         playerTwoName = (TextView) findViewById(R.id.person2);
         playerTwoStatus = (TextView) findViewById(R.id.playerTwoStatus);
-        new Thread() { // listen for player 2 join
-            @Override
-            public void run() {
-                System.out.println("Listening for player 2 join, isBound = " + mIsBound);
-                Socket socket = null;
-                try {
-                    socket = new Socket(InetAddress.getByName(SocketService.SERVERIP), SocketService.SERVERPORT);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                while(socket.isConnected()) {
-                    try {
-                        ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
-                        playerTwoName.setText((String) objectInputStream.readObject());
-                        playerTwoStatus.setText("(Ready)");
-                    } catch (IOException | ClassNotFoundException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }.start();
         startButton = (Button) findViewById(R.id.start);
         startButton.setEnabled(false);
         startButton.setOnClickListener(new View.OnClickListener() {
@@ -111,14 +117,10 @@ public class RoomLobby extends AppCompatActivity {
         startButton.setEnabled(true);
     }
 
-    // TODO: set player two name by server
-    protected void setPlayerTwoName() {
-        playerTwoName.setText("name");
-    }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
         doUnbindService();
+        listeningForPlayerJoin.stop();
     }
 }

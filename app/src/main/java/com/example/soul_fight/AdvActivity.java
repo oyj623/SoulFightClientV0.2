@@ -40,7 +40,6 @@ public class AdvActivity extends AppCompatActivity {
             levelButtons.get(i).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    // TODO: set game setting in shared preferences
                     Intent intent = new Intent(getApplicationContext(), Adevnture.class);
                     intent.putExtra("level", finalI + 1);
                     startActivity(intent);

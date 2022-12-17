@@ -28,8 +28,11 @@ public class Adevnture extends AppCompatActivity {
     private ImageView enemyCharacter;
     private TextView playerHealthTV;
     private TextView enemyHealthTV;
-    private ImageButton button;
-    Dialog dialog;
+    private ImageButton surrenderButton;
+
+    Dialog surrenderDialog;
+    Dialog victoryDialog;
+    Dialog defeatDialog;
     TextView flashCard;
     private TextView inputAnswer;
     private ArrayList<Button> numpad;
@@ -104,18 +107,83 @@ public class Adevnture extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_adevnture);
 
-        dialog = new Dialog(Adevnture.this);
-        dialog.setContentView(R.layout.custom_dialog);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
-            dialog.getWindow().setBackgroundDrawable(getDrawable(R.drawable.background));
-        }
+        Intent lastIntent = getIntent();
+        int level = lastIntent.getIntExtra("level", 0);
 
-        dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        dialog.setCancelable(false);
-        ImageButton restart = dialog.findViewById(R.id.restart);
-        ImageButton play = dialog.findViewById(R.id.play);
-        ImageButton home = dialog.findViewById(R.id.home);
-        ImageButton exit = dialog.findViewById(R.id.exit);
+        surrenderDialog = new Dialog(Adevnture.this);
+        victoryDialog = new Dialog(Adevnture.this);
+        defeatDialog = new Dialog(Adevnture.this);
+        surrenderDialog.setContentView(R.layout.custom_dialog);
+        victoryDialog.setContentView(R.layout.clear);
+        defeatDialog.setContentView(R.layout.fail);
+        surrenderDialog.getWindow().setBackgroundDrawable(getDrawable(R.drawable.background));
+        victoryDialog.getWindow().setBackgroundDrawable(getDrawable(R.drawable.background));
+        defeatDialog.getWindow().setBackgroundDrawable(getDrawable(R.drawable.background));
+
+        surrenderDialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        victoryDialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        defeatDialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        surrenderDialog.setCancelable(false);
+        victoryDialog.setCancelable(false);
+        defeatDialog.setCancelable(false);
+
+
+        // defeat dialog
+        TextView defeatDialogLevelView = (TextView) defeatDialog.findViewById(R.id.level);
+        defeatDialogLevelView.setText("Level " + level);
+        Button restartLevel = (Button) defeatDialog.findViewById(R.id.restart);
+        restartLevel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), Adevnture.class);
+                intent.putExtra("level", getIntent().getIntExtra("level", 1));
+                surrenderDialog.cancel();
+                defeatDialog.cancel();
+                finish();
+                startActivity(intent);
+            }
+        });
+        ImageButton homeButton = (ImageButton) defeatDialog.findViewById(R.id.home);
+        // exit to home
+        homeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(getApplicationContext(), HomeActivity.class));
+            }
+        });
+        ImageButton exitButton = (ImageButton) defeatDialog.findViewById(R.id.exit);
+        // exit to level selection
+        exitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(getApplicationContext(), AdvActivity.class));
+            }
+        });
+
+        // surrender dialog
+        TextView levelView = (TextView) surrenderDialog.findViewById(R.id.level);
+        levelView.setText("Level " + level);
+        surrenderButton = (ImageButton) findViewById(R.id.surrenderButton);
+        surrenderButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                surrenderDialog.show();
+            }
+        });
+        ImageButton cancelSurrender = (ImageButton) surrenderDialog.findViewById(R.id.cancelSurrender);
+        ImageButton confirmSurrender = (ImageButton) surrenderDialog.findViewById(R.id.confirmSurrender);
+        cancelSurrender.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                surrenderDialog.cancel();
+            }
+        });
+        confirmSurrender.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                defeatDialog.show();
+            }
+        });
 
         playerCharacter = (ImageView) findViewById(R.id.playerCharacter);
         enemyCharacter = (ImageView) findViewById(R.id.enemyCharacter);
@@ -189,9 +257,6 @@ public class Adevnture extends AppCompatActivity {
                     attackTimer.schedule(enemyAttackTask, 0);
                     attackTimer.schedule(enemyIdleTask, 750);
                     playerHealth -= 10.0;
-                    if (playerHealth <= 0) {
-                        // TODO: display defeated message, exit to level selection
-                    }
                     playerHealthTV.setText(String.format("%d/100", (int)playerHealth));
 
                 } else if (Integer.parseInt(inputAnswer.getText().toString()) == currentQuestion.answer) {
@@ -230,7 +295,37 @@ public class Adevnture extends AppCompatActivity {
                     attackTimer.scheduleAtFixedRate(playerAttackTask, 0, 750);
                     enemyHealth -= convertedDamage;
                     if (enemyHealth <= 0) {
-                        // TODO: display victory message, exit to level selection
+                        victoryDialog.show();
+                        TextView victoryDialogLevelView = (TextView) victoryDialog.findViewById(R.id.level);
+                        victoryDialogLevelView.setText("Level " + level);
+                        View nextLevelView = victoryDialog.findViewById(R.id.next);
+                        if (level == 5) {
+                            nextLevelView.setVisibility(View.GONE);
+                        } else {
+                            Button nextLevel = (Button) nextLevelView;
+                            nextLevel.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    Intent intent = new Intent(getApplicationContext(), Adevnture.class);
+                                    intent.putExtra("level", 1 + getIntent().getIntExtra("level", 1));
+                                    startActivity(intent);
+                                }
+                            });
+                        }
+                        ImageButton homeButton = (ImageButton) victoryDialog.findViewById(R.id.home);
+                        homeButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                startActivity(new Intent(getApplicationContext(), HomeActivity.class));
+                            }
+                        });
+                        ImageButton exitButton = (ImageButton) victoryDialog.findViewById(R.id.exit);
+                        exitButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                startActivity(new Intent(getApplicationContext(), AdvActivity.class));
+                            }
+                        });
                     }
                     enemyHealthTV.setText(String.format("%d/100", (int)enemyHealth));
                     System.out.println("deltaTime = " + deltaTime);
@@ -264,10 +359,10 @@ public class Adevnture extends AppCompatActivity {
                     attackTimer.schedule(enemyAttackTask, 0);
                     attackTimer.schedule(enemyIdleTask, 750);
                     playerHealth -= 10;
-                    if (playerHealth <= 0) {
-                        // TODO: display defeated message, exit to level selection
-                    }
                     playerHealthTV.setText(String.format("%d/100", (int)playerHealth));
+                }
+                if (playerHealth <= 0) {
+                    defeatDialog.show();
                 }
                 inputAnswer.setText("");
                 currentQuestion = nextQuestion;
@@ -275,35 +370,6 @@ public class Adevnture extends AppCompatActivity {
                 flashQuestion();
             }
         });
-
-        restart.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // this is restart btn to restart the game, in custom_dialog
-
-            }
-        });
-        play.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // this is play btn, resume the game
-
-            }
-        });
-        home.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // this is home btn, to back to home
-
-            }
-        });
-        exit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // this is exit btn, to back to adv page
-            }
-        });
-        button = findViewById(R.id.imageButton);
 
         /* Initialize Game Settings
             +-------+---------------+---------------+-----------------+-------------------+
@@ -322,8 +388,6 @@ public class Adevnture extends AppCompatActivity {
             |     5 |             3 |             3 |               8 |              1.75 |
             +-------+---------------+---------------+-----------------+-------------------+
          */
-        Intent lastIntent = getIntent();
-        int level = lastIntent.getIntExtra("level", 0);
         int levelSetMinDigit[] = {1, 1, 1, 2, 2, 3};
         int levelSetMaxDigit[] = {1, 1, 2, 2, 3, 3};
         int levelSetQuestionLength[] = {5, 12, 11, 10, 9, 8};
@@ -387,7 +451,7 @@ public class Adevnture extends AppCompatActivity {
                     flashCard.setText(currentQuestion.numbers.get(counter).toString());
                     counter++;
                 } else {
-                    flashCard.setText(/*Integer.toString(currentQuestion.answer)*/"Enter answer");
+                    flashCard.setText("*DEBUG* " + currentQuestion.answer/*"Enter answer"*/);
                     questionTimer.cancel();
                 }
             }

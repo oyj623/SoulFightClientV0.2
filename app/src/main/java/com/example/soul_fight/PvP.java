@@ -2,6 +2,7 @@ package com.example.soul_fight;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -10,11 +11,15 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Date;
@@ -23,6 +28,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class PvP extends AppCompatActivity {
+
+    boolean sendDamageFlag;
+    double sendingDamage;
 
     private ImageView playerCharacter;
     private ImageView enemyCharacter;
@@ -35,12 +43,17 @@ public class PvP extends AppCompatActivity {
     private Button enter;
     private long recordedTime;
 
+    Dialog surrenderDialog;
+    Dialog victoryDialog;
+    Dialog defeatDialog;
+
     /* Game Settings */
     private double playerHealth;
     private double enemyHealth;
     private int maxDigit;
     private int minDigit;
     private int lengthPerQuestion;
+    private int seed;
     private int flashSpeedInMillisecond;
     private ArrayList<QuestionType> availableQuestionTypes;
     private Random random;
@@ -98,7 +111,11 @@ public class PvP extends AppCompatActivity {
     private Question currentQuestion;
     private Question nextQuestion;
 
+    boolean thereIsAWinner = false;
     // Socket setting
+    ObjectInputStream ois;
+    ObjectOutputStream oos;
+    Socket socket;
     SocketService mBoundService;
     boolean mIsBound = false;
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -107,7 +124,62 @@ public class PvP extends AppCompatActivity {
         public void onServiceConnected(ComponentName name, IBinder service) {
             // TODO Auto-generated method stub
             mBoundService = ((SocketService.LocalBinder)service).getService();
-            mBoundService.listenMatchStart();
+            socket = mBoundService.socket;
+            try {
+                ois = new ObjectInputStream(socket.getInputStream());
+                oos = new ObjectOutputStream(socket.getOutputStream());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Thread listeningToSeed = new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        seed = (int) ois.readObject();
+                        random = new Random(seed);
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+            listeningToSeed.start();
+            try {
+                listeningToSeed.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            new Thread() {
+                @Override
+                public void run() {
+                    double dmgFromServer;
+                    while(socket.isConnected() && !thereIsAWinner){
+                        try{
+                            dmgFromServer = (Double) ois.readObject();
+                            if(dmgFromServer < 0){ //When game is over will send -1 or -2
+                                //game over
+                                thereIsAWinner = true;
+                                if(dmgFromServer == -1){
+                                    victoryDialog.show();
+                                    System.out.println("You have won" + dmgFromServer);
+                                }
+                                if(dmgFromServer == -2){
+                                    defeatDialog.show();
+                                    System.out.println("You have lost" + dmgFromServer);
+                                }
+                            }else{
+                                System.out.println("Damage from server: "+dmgFromServer);
+                                receivedDamage(dmgFromServer);
+                            }
+
+                        }catch(IOException | ClassNotFoundException e){
+                            System.out.println(e);
+                        }
+                    }
+                }
+            }.start();
 
         }
 
@@ -136,37 +208,66 @@ public class PvP extends AppCompatActivity {
         setContentView(R.layout.activity_pv_p);
 
         doBindService();
-        Socket socket = mBoundService.socket;
-        new Thread() {
-            @Override
-            public void run() {
-                double dmgFromServer;
-                System.out.println("Listening for Damage....");
-                while(socket.isConnected()){
-                    try{
-                        dmgFromServer = (Double) mBoundService.objectInputStream.readObject();
-                        if(dmgFromServer < 0){ //When game is over will send -1 or -2
-                            //game over
-                            //DO WHATEVER
-                            if(dmgFromServer == -1){
-                                //WIN
-                                System.out.println("You have won" + dmgFromServer);
-                            }
-                            if(dmgFromServer == -2){
-                                //lose
-                                System.out.println("You have lost" + dmgFromServer);
-                            }
-                        }else{
-                            System.out.println("Damage from server: "+dmgFromServer);
-                            receivedDamage(dmgFromServer);
-                        }
 
-                    }catch(IOException | ClassNotFoundException e){
-                        System.out.println(e);
-                    }
-                }
+        // dialogs setup
+        surrenderDialog = new Dialog(PvP.this);
+        victoryDialog = new Dialog(PvP.this);
+        defeatDialog = new Dialog(PvP.this);
+        surrenderDialog.setContentView(R.layout.custom_dialog);
+        victoryDialog.setContentView(R.layout.win);
+        defeatDialog.setContentView(R.layout.lose);
+        surrenderDialog.getWindow().setBackgroundDrawable(getDrawable(R.drawable.background));
+        victoryDialog.getWindow().setBackgroundDrawable(getDrawable(R.drawable.background));
+        defeatDialog.getWindow().setBackgroundDrawable(getDrawable(R.drawable.background));
+
+        surrenderDialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        victoryDialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        defeatDialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        surrenderDialog.setCancelable(false);
+        victoryDialog.setCancelable(false);
+        defeatDialog.setCancelable(false);
+
+        ImageButton homeButton = (ImageButton) defeatDialog.findViewById(R.id.home);
+        // exit to home
+        homeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(getApplicationContext(), HomeActivity.class));
             }
-        }.start();
+        });
+        ImageButton exitButton = (ImageButton) defeatDialog.findViewById(R.id.exit);
+        // exit to create/join room selection
+        exitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(getApplicationContext(), PvPActivity.class));
+            }
+        });
+
+        surrenderDialog.findViewById(R.id.level).setVisibility(View.GONE); // disable level view
+        ImageButton surrenderButton = (ImageButton) findViewById(R.id.surrenderButton);
+        surrenderButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                surrenderDialog.show();
+            }
+        });
+        ImageButton cancelSurrender = (ImageButton) surrenderDialog.findViewById(R.id.cancelSurrender);
+        ImageButton confirmSurrender = (ImageButton) surrenderDialog.findViewById(R.id.confirmSurrender);
+        cancelSurrender.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                surrenderDialog.cancel();
+            }
+        });
+        confirmSurrender.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // TODO: send surrender to server !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+                defeatDialog.show();
+            }
+        });
 
         playerCharacter = (ImageView) findViewById(R.id.playerCharacter);
         enemyCharacter = (ImageView) findViewById(R.id.enemyCharacter);
@@ -250,9 +351,24 @@ public class PvP extends AppCompatActivity {
                     attackTimer.scheduleAtFixedRate(playerAttackTask, 0, 750);
                     enemyHealth -= convertedDamage;
                     if (enemyHealth <= 0) {
-                        // TODO: display victory message, exit to level selection
+                        victoryDialog.show();
+                        ImageButton homeButton = (ImageButton) victoryDialog.findViewById(R.id.home);
+                        homeButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                startActivity(new Intent(getApplicationContext(), HomeActivity.class));
+                            }
+                        });
+                        ImageButton exitButton = (ImageButton) victoryDialog.findViewById(R.id.exit);
+                        exitButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                startActivity(new Intent(getApplicationContext(), PvPActivity.class));
+                            }
+                        });
                     }
                     enemyHealthTV.setText(String.format("%d/100", (int)enemyHealth));
+                    // TODO: send converted damage to server
                     System.out.println("deltaTime = " + deltaTime);
                     System.out.println("damage = " + convertedDamage);
                 } else {
@@ -264,7 +380,6 @@ public class PvP extends AppCompatActivity {
                 flashQuestion();
             }
         });
-        this.random = new Random(new Date().getTime());
         this.lengthPerQuestion = 10;
         RoomSettings thisSettings = (RoomSettings) getIntent().getParcelableExtra("roomSettings");
         this.minDigit = thisSettings.minimumDigit;

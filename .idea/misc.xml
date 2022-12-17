@@ -5,6 +5,7 @@
       <map>
         <entry key="..\:/Users/Dell/Documents/22sem3/SWE311 Mobile Application System Design/Assignments/Soul_Fight/app/src/main/res/drawable/background.xml" value="0.103" />
         <entry key="..\:/Users/Dell/Documents/22sem3/SWE311 Mobile Application System Design/Assignments/Soul_Fight/app/src/main/res/drawable/btn_bg.xml" value="0.103" />
+        <entry key="..\:/Users/Dell/Documents/22sem3/SWE311 Mobile Application System Design/Assignments/Soul_Fight/app/src/main/res/drawable/ic_baseline_flag_24.xml" value="0.1" />
         <entry key="..\:/Users/Dell/Documents/22sem3/SWE311 Mobile Application System Design/Assignments/Soul_Fight/app/src/main/res/layout/activity_adevnture.xml" value="0.176" />
         <entry key="..\:/Users/Dell/Documents/22sem3/SWE311 Mobile Application System Design/Assignments/Soul_Fight/app/src/main/res/layout/activity_adv.xml" value="0.1046875" />
         <entry key="..\:/Users/Dell/Documents/22sem3/SWE311 Mobile Application System Design/Assignments/Soul_Fight/app/src/main/res/layout/activity_create_room.xml" value="0.176" />
@@ -15,15 +16,19 @@
         <entry key="..\:/Users/Dell/Documents/22sem3/SWE311 Mobile Application System Design/Assignments/Soul_Fight/app/src/main/res/layout/activity_main.xml" value="0.11302083333333333" />
         <entry key="..\:/Users/Dell/Documents/22sem3/SWE311 Mobile Application System Design/Assignments/Soul_Fight/app/src/main/res/layout/activity_practice.xml" value="0.2" />
         <entry key="..\:/Users/Dell/Documents/22sem3/SWE311 Mobile Application System Design/Assignments/Soul_Fight/app/src/main/res/layout/activity_practice_setting.xml" value="0.2" />
-        <entry key="..\:/Users/Dell/Documents/22sem3/SWE311 Mobile Application System Design/Assignments/Soul_Fight/app/src/main/res/layout/activity_pv_p.xml" value="0.11302083333333333" />
+        <entry key="..\:/Users/Dell/Documents/22sem3/SWE311 Mobile Application System Design/Assignments/Soul_Fight/app/src/main/res/layout/activity_pv_p.xml" value="0.2" />
         <entry key="..\:/Users/Dell/Documents/22sem3/SWE311 Mobile Application System Design/Assignments/Soul_Fight/app/src/main/res/layout/activity_pv_pactivity.xml" value="0.1046875" />
         <entry key="..\:/Users/Dell/Documents/22sem3/SWE311 Mobile Application System Design/Assignments/Soul_Fight/app/src/main/res/layout/activity_room_lobby.xml" value="0.176" />
         <entry key="..\:/Users/Dell/Documents/22sem3/SWE311 Mobile Application System Design/Assignments/Soul_Fight/app/src/main/res/layout/clear.xml" value="0.1" />
-        <entry key="..\:/Users/Dell/Documents/22sem3/SWE311 Mobile Application System Design/Assignments/Soul_Fight/app/src/main/res/layout/fail.xml" value="0.1" />
+        <entry key="..\:/Users/Dell/Documents/22sem3/SWE311 Mobile Application System Design/Assignments/Soul_Fight/app/src/main/res/layout/custom_dialog.xml" value="0.11822916666666666" />
+        <entry key="..\:/Users/Dell/Documents/22sem3/SWE311 Mobile Application System Design/Assignments/Soul_Fight/app/src/main/res/layout/fail.xml" value="0.2" />
         <entry key="..\:/Users/Dell/Documents/22sem3/SWE311 Mobile Application System Design/Assignments/Soul_Fight/app/src/main/res/layout/fragment_home.xml" value="0.11302083333333333" />
+        <entry key="..\:/Users/Dell/Documents/22sem3/SWE311 Mobile Application System Design/Assignments/Soul_Fight/app/src/main/res/layout/fragment_setting.xml" value="0.10260416666666666" />
         <entry key="..\:/Users/Dell/Documents/22sem3/SWE311 Mobile Application System Design/Assignments/Soul_Fight/app/src/main/res/layout/login_tab_fragment.xml" value="0.1" />
+        <entry key="..\:/Users/Dell/Documents/22sem3/SWE311 Mobile Application System Design/Assignments/Soul_Fight/app/src/main/res/layout/lose.xml" value="0.10260416666666666" />
         <entry key="..\:/Users/Dell/Documents/22sem3/SWE311 Mobile Application System Design/Assignments/Soul_Fight/app/src/main/res/layout/nav_header.xml" value="0.1" />
         <entry key="..\:/Users/Dell/Documents/22sem3/SWE311 Mobile Application System Design/Assignments/Soul_Fight/app/src/main/res/layout/practice_pause.xml" value="0.264" />
+        <entry key="..\:/Users/Dell/Documents/22sem3/SWE311 Mobile Application System Design/Assignments/Soul_Fight/app/src/main/res/layout/win.xml" value="0.10260416666666666" />
       </map>
     </option>
   </component>
