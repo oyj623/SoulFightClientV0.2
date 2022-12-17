@@ -451,7 +451,7 @@ public class Adevnture extends AppCompatActivity {
                     flashCard.setText(currentQuestion.numbers.get(counter).toString());
                     counter++;
                 } else {
-                    flashCard.setText("*DEBUG* " + currentQuestion.answer/*"Enter answer"*/);
+                    flashCard.setText(/*"*DEBUG* " + currentQuestion.answer*/"Enter answer");
                     questionTimer.cancel();
                 }
             }

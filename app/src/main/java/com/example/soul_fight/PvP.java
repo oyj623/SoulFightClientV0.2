@@ -124,6 +124,100 @@ public class PvP extends AppCompatActivity {
         public void onServiceConnected(ComponentName name, IBinder service) {
             // TODO Auto-generated method stub
             mBoundService = ((SocketService.LocalBinder)service).getService();
+
+            surrenderDialog = new Dialog(PvP.this);
+            surrenderDialog.setContentView(R.layout.custom_dialog);
+            surrenderDialog.getWindow().setBackgroundDrawable(getDrawable(R.drawable.background));
+            surrenderDialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            surrenderDialog.setCancelable(false);
+            surrenderDialog.findViewById(R.id.level).setVisibility(View.GONE); // disable level view
+            ImageButton cancelSurrender = (ImageButton) surrenderDialog.findViewById(R.id.cancelSurrender);
+            ImageButton confirmSurrender = (ImageButton) surrenderDialog.findViewById(R.id.confirmSurrender);
+            cancelSurrender.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    surrenderDialog.cancel();
+                }
+            });
+            confirmSurrender.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mBoundService.sendDamage(-3.0);
+                    defeatDialog.show();
+                }
+            });
+
+            enter = (Button) findViewById(R.id.buttonEnter);
+            enter.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (inputAnswer.getText().toString().equals("")) {
+                        correctStreak = 0;
+                    } else if (Integer.parseInt(inputAnswer.getText().toString()) == currentQuestion.answer) {
+                        // if correct answer
+                        long currentTime = (long) System.currentTimeMillis();
+                        long deltaTime = currentTime - recordedTime;
+                        long damage = (long) 20000 - deltaTime;
+                        int convertedDamage = damage < 0? 0: (int) (damage / 1000) * 2;
+                        if (currentQuestion.type == QuestionType.MULTIPLICATION || currentQuestion.type == QuestionType.DIVISION) {
+                            // if question is multiplication or division, double the damage
+                            convertedDamage *= 2;
+                        }
+                        correctStreak++;
+                        Timer attackTimer = new Timer();
+                        TimerTask playerAttackTask = new TimerTask() {
+                            int counter = 0;
+                            @Override
+                            public void run() {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (counter == 0) {
+                                            playerCharacter.setImageResource(R.drawable.player_attack);
+                                            counter++;
+                                        } else if (counter == 1) {
+                                            playerCharacter.setImageResource(R.drawable.player_idle);
+                                            counter++;
+                                        } else {
+                                            attackTimer.cancel();
+                                        }
+                                    }
+                                });
+
+                            }
+                        };
+                        attackTimer.scheduleAtFixedRate(playerAttackTask, 0, 750);
+                        enemyHealth -= convertedDamage;
+                        if (enemyHealth <= 0) {
+                            victoryDialog.show();
+                            ImageButton homeButton = (ImageButton) victoryDialog.findViewById(R.id.home);
+                            homeButton.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    startActivity(new Intent(getApplicationContext(), HomeActivity.class));
+                                }
+                            });
+                            ImageButton exitButton = (ImageButton) victoryDialog.findViewById(R.id.exit);
+                            exitButton.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    startActivity(new Intent(getApplicationContext(), PvPActivity.class));
+                                }
+                            });
+                        }
+                        enemyHealthTV.setText(String.format("%d/100", (int)enemyHealth));
+                        mBoundService.sendDamage((double) convertedDamage); //  send damage to server
+                        System.out.println("deltaTime = " + deltaTime);
+                        System.out.println("damage = " + convertedDamage);
+                    } else {
+                        correctStreak = 0;
+                    }
+                    inputAnswer.setText("");
+                    currentQuestion = nextQuestion;
+                    generateNextQuestion();
+                    flashQuestion();
+                }
+            });
             socket = mBoundService.socket;
             try {
                 ois = new ObjectInputStream(socket.getInputStream());
@@ -210,20 +304,15 @@ public class PvP extends AppCompatActivity {
         doBindService();
 
         // dialogs setup
-        surrenderDialog = new Dialog(PvP.this);
         victoryDialog = new Dialog(PvP.this);
         defeatDialog = new Dialog(PvP.this);
-        surrenderDialog.setContentView(R.layout.custom_dialog);
         victoryDialog.setContentView(R.layout.win);
         defeatDialog.setContentView(R.layout.lose);
-        surrenderDialog.getWindow().setBackgroundDrawable(getDrawable(R.drawable.background));
         victoryDialog.getWindow().setBackgroundDrawable(getDrawable(R.drawable.background));
         defeatDialog.getWindow().setBackgroundDrawable(getDrawable(R.drawable.background));
 
-        surrenderDialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         victoryDialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         defeatDialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        surrenderDialog.setCancelable(false);
         victoryDialog.setCancelable(false);
         defeatDialog.setCancelable(false);
 
@@ -244,28 +333,11 @@ public class PvP extends AppCompatActivity {
             }
         });
 
-        surrenderDialog.findViewById(R.id.level).setVisibility(View.GONE); // disable level view
         ImageButton surrenderButton = (ImageButton) findViewById(R.id.surrenderButton);
         surrenderButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 surrenderDialog.show();
-            }
-        });
-        ImageButton cancelSurrender = (ImageButton) surrenderDialog.findViewById(R.id.cancelSurrender);
-        ImageButton confirmSurrender = (ImageButton) surrenderDialog.findViewById(R.id.confirmSurrender);
-        cancelSurrender.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                surrenderDialog.cancel();
-            }
-        });
-        confirmSurrender.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // TODO: send surrender to server !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-                defeatDialog.show();
             }
         });
 
@@ -307,77 +379,6 @@ public class PvP extends AppCompatActivity {
                 }
                 String currentAnswer = inputAnswer.getText().toString();
                 inputAnswer.setText(currentAnswer.substring(0, currentAnswer.length() - 1));
-            }
-        });
-        enter = (Button) findViewById(R.id.buttonEnter);
-        enter.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (inputAnswer.getText().toString().equals("")) {
-                    correctStreak = 0;
-                } else if (Integer.parseInt(inputAnswer.getText().toString()) == currentQuestion.answer) {
-                    // if correct answer
-                    long currentTime = (long) System.currentTimeMillis();
-                    long deltaTime = currentTime - recordedTime;
-                    long damage = (long) 20000 - deltaTime;
-                    int convertedDamage = damage < 0? 0: (int) (damage / 1000) * 2;
-                    if (currentQuestion.type == QuestionType.MULTIPLICATION || currentQuestion.type == QuestionType.DIVISION) {
-                        // if question is multiplication or division, double the damage
-                        convertedDamage *= 2;
-                    }
-                    correctStreak++;
-                    Timer attackTimer = new Timer();
-                    TimerTask playerAttackTask = new TimerTask() {
-                        int counter = 0;
-                        @Override
-                        public void run() {
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    if (counter == 0) {
-                                        playerCharacter.setImageResource(R.drawable.player_attack);
-                                        counter++;
-                                    } else if (counter == 1) {
-                                        playerCharacter.setImageResource(R.drawable.player_idle);
-                                        counter++;
-                                    } else {
-                                        attackTimer.cancel();
-                                    }
-                                }
-                            });
-
-                        }
-                    };
-                    attackTimer.scheduleAtFixedRate(playerAttackTask, 0, 750);
-                    enemyHealth -= convertedDamage;
-                    if (enemyHealth <= 0) {
-                        victoryDialog.show();
-                        ImageButton homeButton = (ImageButton) victoryDialog.findViewById(R.id.home);
-                        homeButton.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                startActivity(new Intent(getApplicationContext(), HomeActivity.class));
-                            }
-                        });
-                        ImageButton exitButton = (ImageButton) victoryDialog.findViewById(R.id.exit);
-                        exitButton.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                startActivity(new Intent(getApplicationContext(), PvPActivity.class));
-                            }
-                        });
-                    }
-                    enemyHealthTV.setText(String.format("%d/100", (int)enemyHealth));
-                    // TODO: send converted damage to server
-                    System.out.println("deltaTime = " + deltaTime);
-                    System.out.println("damage = " + convertedDamage);
-                } else {
-                    correctStreak = 0;
-                }
-                inputAnswer.setText("");
-                currentQuestion = nextQuestion;
-                generateNextQuestion();
-                flashQuestion();
             }
         });
         this.lengthPerQuestion = 10;
@@ -459,7 +460,7 @@ public class PvP extends AppCompatActivity {
         attackTimer.schedule(enemyIdleTask, 750);
         playerHealth -= damage;
         if (playerHealth <= 0) {
-            // TODO: display defeated message, exit to PvPActivity
+            defeatDialog.show();
         }
         playerHealthTV.setText(String.format("%d/100", (int)playerHealth));
     }
