@@ -51,8 +51,6 @@ public class JoinLobby extends AppCompatActivity {
             };
             initiatingRoom.start();
 
-            System.out.print("\nois = " + ois);
-            System.out.println("\noos = " + oos);
             try {
                 System.out.println("Waiting for init room to end");
                 initiatingRoom.join();
@@ -146,6 +144,10 @@ public class JoinLobby extends AppCompatActivity {
                     oos.flush();
                     System.out.println("getting room host");
                     host = (String) ois.readObject();
+
+                    oos.writeObject("getRoomSettings");
+                    oos.flush();
+                    RoomSettings roomSettings = (RoomSettings) ois.readObject();
 
                 } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();

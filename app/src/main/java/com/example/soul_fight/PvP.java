@@ -219,7 +219,7 @@ public class PvP extends AppCompatActivity {
                 }
             });
             socket = mBoundService.socket;
-            try {
+            try { // TODO: dunno if it same as mBoundService.oos, ois,,, need further test
                 ois = new ObjectInputStream(socket.getInputStream());
                 oos = new ObjectOutputStream(socket.getOutputStream());
             } catch (IOException e) {
@@ -303,6 +303,8 @@ public class PvP extends AppCompatActivity {
 
         doBindService();
 
+        seed = 1;
+
         // dialogs setup
         victoryDialog = new Dialog(PvP.this);
         defeatDialog = new Dialog(PvP.this);
@@ -382,10 +384,11 @@ public class PvP extends AppCompatActivity {
             }
         });
         this.lengthPerQuestion = 10;
+
+        availableQuestionTypes = new ArrayList<QuestionType>();
         RoomSettings thisSettings = (RoomSettings) getIntent().getParcelableExtra("roomSettings");
         this.minDigit = thisSettings.minimumDigit;
         this.maxDigit = thisSettings.maximumDigit;
-        availableQuestionTypes = new ArrayList<QuestionType>();
         if (thisSettings.operators[0]) {
             this.availableQuestionTypes.add(QuestionType.ADDITION);
         }
@@ -398,6 +401,8 @@ public class PvP extends AppCompatActivity {
         if (thisSettings.operators[3]) {
             this.availableQuestionTypes.add(QuestionType.DIVISION);
         }
+
+
 
         // generate first two questions
         generateNextQuestion();

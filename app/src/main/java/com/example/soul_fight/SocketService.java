@@ -3,6 +3,7 @@ package com.example.soul_fight;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -148,7 +149,7 @@ public class SocketService extends Service {
     }
 
     //Put under onServiceConnected function in whichever activity that has the start match button
-    public void listenMatchStart(){
+    public void listenMatchStart(RoomSettings roomSettings){
 
         new Thread(){
             @Override
@@ -161,6 +162,9 @@ public class SocketService extends Service {
                         if(s.equals("Begin Match")){
                             seed = (int) objectInputStream.readObject();
                             Intent intent = new Intent(getApplicationContext(), PvP.class);
+                            Bundle roomSettingBundle = new Bundle();
+                            roomSettingBundle.putSerializable("roomSettings", roomSettings);
+                            intent.putExtra("roomSettings", roomSettingBundle);
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                             startActivity(intent);
                         }

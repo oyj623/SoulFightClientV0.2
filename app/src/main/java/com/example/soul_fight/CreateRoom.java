@@ -21,7 +21,7 @@ public class CreateRoom extends AppCompatActivity {
     private Spinner digitSettings;
     private Spinner flashSpeedSettings;
     private Button createRoom;
-
+    RoomSettings thisRoomSetting;
     // Socket setting
     SocketService mBoundService;
     boolean mIsBound = false;
@@ -31,7 +31,11 @@ public class CreateRoom extends AppCompatActivity {
         public void onServiceConnected(ComponentName name, IBinder service) {
             // TODO Auto-generated method stub
             mBoundService = ((SocketService.LocalBinder)service).getService();
-            mBoundService.listenMatchStart();
+
+            if(mBoundService!=null){
+                mBoundService.createRoom(thisRoomSetting);
+            }
+
         }
 
         @Override
@@ -134,7 +138,6 @@ public class CreateRoom extends AppCompatActivity {
         createRoom.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO: connect to server
                 int minimumDigit = 1;
                 int maximumDigit = 1;
                 switch (digitSettings.getSelectedItem().toString()) {
@@ -175,7 +178,7 @@ public class CreateRoom extends AppCompatActivity {
                         flashSpeed = 1750;
                         break;
                 } // end flash speed setting switch case
-                RoomSettings thisRoomSetting = new RoomSettings(
+                thisRoomSetting = new RoomSettings(
                     10, minimumDigit, maximumDigit, flashSpeed, new boolean[] {
                         hasAddition.isChecked(),
                         hasSubtraction.isChecked(),
@@ -183,9 +186,6 @@ public class CreateRoom extends AppCompatActivity {
                         hasDivision.isChecked()
                     }
                 );
-                if(mBoundService!=null){
-                    mBoundService.createRoom(thisRoomSetting);
-                }
                 Intent intent = new Intent(getApplicationContext(), RoomLobby.class);
                 Bundle roomSettingBundle = new Bundle();
                 roomSettingBundle.putSerializable("roomSettings", thisRoomSetting);

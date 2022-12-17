@@ -38,6 +38,17 @@ public class RoomLobby extends AppCompatActivity {
         public void onServiceConnected(ComponentName name, IBinder service) {
             // TODO Auto-generated method stub
             mBoundService = ((SocketService.LocalBinder)service).getService();
+            startButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(mBoundService!=null){
+                        mBoundService.startMatch(); //Enter the room settings here
+                    }
+                    Intent intent = new Intent(getApplicationContext(), PvP.class);
+                    intent.putExtra("roomSettings", getIntent().getBundleExtra("roomSettings"));
+                    startActivity(intent);
+                }
+            });
             socket = mBoundService.socket;
             ois = mBoundService.objectInputStream;
             oos = mBoundService.objectOutputStream;
@@ -93,22 +104,11 @@ public class RoomLobby extends AppCompatActivity {
         doBindService();
 
         roomNumber = (TextView) findViewById(R.id.roomNumber);
-        roomNumber.setText("0"); // TODO: get real room number from server
+        roomNumber.setText("0");
         playerTwoName = (TextView) findViewById(R.id.person2);
         playerTwoStatus = (TextView) findViewById(R.id.playerTwoStatus);
         startButton = (Button) findViewById(R.id.start);
         startButton.setEnabled(false);
-        startButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(mBoundService!=null){
-                    mBoundService.startMatch(); //Enter the room settings here
-                }
-                Intent intent = new Intent(getApplicationContext(), PvP.class);
-                intent.putExtra("roomSettings", getIntent().getBundleExtra("roomSettings"));
-                startActivity(intent);
-            }
-        });
     }
 
     // TODO: player two status change according to server

@@ -2,11 +2,15 @@ package com.example.soul_fight;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Dialog;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import org.w3c.dom.Text;
@@ -18,6 +22,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class Practice extends AppCompatActivity {
+
+    Dialog confirmExitDialog;
+    ImageButton exitButton;
 
     private TextView flashCard;
     private TextView inputAnswer;
@@ -83,12 +90,45 @@ public class Practice extends AppCompatActivity {
         } // end Question(QuestionType) constructor
     } // end Question class declaration
 
-
-    // TODO: exit
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_practice);
+
+        confirmExitDialog = new Dialog(Practice.this);
+        confirmExitDialog.setContentView(R.layout.custom_dialog);
+        confirmExitDialog.getWindow().setBackgroundDrawable(getDrawable(R.drawable.background));
+        confirmExitDialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        confirmExitDialog.setCancelable(false);
+        // delete level view
+        View levelView = confirmExitDialog.findViewById(R.id.level);
+        levelView.setVisibility(View.GONE);
+        TextView question = (TextView) confirmExitDialog.findViewById(R.id.pause);
+        question.setText("Do you really want to quit?");
+        ImageButton confirmExit = (ImageButton) confirmExitDialog.findViewById(R.id.confirmSurrender);
+        ImageButton cancelExit = (ImageButton) confirmExitDialog.findViewById(R.id.cancelSurrender);
+        confirmExit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // TODO: maybe display result
+                startActivity(new Intent(getApplicationContext(), PracticeSetting.class));
+            }
+        });
+        cancelExit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                confirmExitDialog.cancel();
+            }
+        });
+        exitButton = (ImageButton) findViewById(R.id.exitButton);
+        exitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                confirmExitDialog.show();
+            }
+        });
+
+
         this.random = new Random(new Date().getTime());
         this.lengthPerQuestion = 10;
         RoomSettings thisSettings = (RoomSettings) getIntent().getParcelableExtra("roomSettings");
