@@ -149,6 +149,7 @@ public class SocketService extends Service {
 
     //Put under onServiceConnected function in whichever activity that has the start match button
     public void listenMatchStart(){
+
         new Thread(){
             @Override
             public void run() {

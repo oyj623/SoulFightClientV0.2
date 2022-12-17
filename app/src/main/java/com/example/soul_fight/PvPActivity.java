@@ -43,6 +43,7 @@ public class PvPActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), JoinRoom.class);
+                startActivity(intent);
             }
         });
     }

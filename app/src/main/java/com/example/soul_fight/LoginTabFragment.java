@@ -95,7 +95,9 @@ public class LoginTabFragment extends Fragment {
         login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Account account = new Account(1, username.getText().toString(), password.getText().toString());
+                //Account account = new Account(1, username.getText().toString(), password.getText().toString());
+                Account account = new Account(1, "Ong Yi Jun", "oyj");
+
                 if(mBoundService!=null){
                     mBoundService.sendAccount(account);
                     mBoundService.checkAccount();

@@ -10,9 +10,11 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -20,10 +22,14 @@ import java.net.Socket;
 public class JoinLobby extends AppCompatActivity {
 
     private Button readyButton;
+    private ImageButton backButton;
     private TextView status;
     private TextView hostName;
     private TextView roomNumber;
     // Socket setting
+    ObjectInputStream ois;
+    ObjectOutputStream oos;
+    Socket socket;
     SocketService mBoundService;
     boolean mIsBound = false;
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -32,8 +38,30 @@ public class JoinLobby extends AppCompatActivity {
         public void onServiceConnected(ComponentName name, IBinder service) {
             // TODO Auto-generated method stub
             mBoundService = ((SocketService.LocalBinder)service).getService();
-            mBoundService.listenMatchStart();
+            System.out.print("In onServiceConnect: ");
+            socket = mBoundService.socket;
+            System.out.print("socket = " + socket);
+            ois = mBoundService.objectInputStream;
+            oos = mBoundService.objectOutputStream;
+            Thread initiatingRoom = new Thread() {
+                @Override
+                public void run() {
+                    initiateThingsInOnCreate();
+                }
+            };
+            initiatingRoom.start();
 
+            System.out.print("\nois = " + ois);
+            System.out.println("\noos = " + oos);
+            try {
+                System.out.println("Waiting for init room to end");
+                initiatingRoom.join();
+                System.out.println("Init room end");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println("calling listen match start");
+            mBoundService.listenMatchStart();
         }
 
         @Override
@@ -44,7 +72,12 @@ public class JoinLobby extends AppCompatActivity {
     };
 
     private void doBindService() {
-        bindService(new Intent(this, SocketService.class), mConnection, Context.BIND_AUTO_CREATE);
+
+        System.out.println("in doBindService()");
+        System.out.println("calling bindService(...)");
+
+        getApplicationContext().bindService(new Intent(this, SocketService.class), mConnection, Context.BIND_AUTO_CREATE);
+        System.out.println("after bindService()");
         mIsBound = true;
     }
 
@@ -59,50 +92,30 @@ public class JoinLobby extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_join_lobby);
+        System.out.println("calling doBindService()");
         doBindService();
-        Socket socket = mBoundService.socket;
 
         readyButton = (Button) findViewById(R.id.ready);
         status = (TextView) findViewById(R.id.playerTwoStatus);
         hostName = (TextView) findViewById(R.id.person1);
         roomNumber = (TextView) findViewById(R.id.roomNumber);
-        roomNumber.setText("0"); // TODO: get room number from server
-        new Thread() {
+        backButton = (ImageButton) findViewById(R.id.back);
+        backButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void run() {
-                try {
-                    Socket socket = new Socket(InetAddress.getByName(SocketService.SERVERIP), SocketService.SERVERPORT);
-                    ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-                    oos.writeObject("getRoomID");
-                    oos.flush();
-                    int roomID = (int) mBoundService.objectInputStream.readObject();
-                    roomNumber.setText(Integer.toString(roomID));
-                } catch (IOException | ClassNotFoundException e) {
-                    e.printStackTrace();
-                }
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(),JoinRoom.class);
+                // TODO: tell server leave room
+                startActivity(intent);
             }
-        }.start();
-        new Thread() {
-            @Override
-            public void run() {
-                try {
-                    Socket socket = new Socket(InetAddress.getByName(SocketService.SERVERIP), SocketService.SERVERPORT);
-                    ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-                    oos.writeObject("getRoomHost");
-                    oos.flush();
-                    String host = (String) mBoundService.objectInputStream.readObject();
-                    hostName.setText(host);
-                } catch (IOException | ClassNotFoundException e) {
-                    e.printStackTrace();
-                }
-            }
-        }.start();
+        });
+
+
+
         // TODO: assign host name by asking server
-        mBoundService.listenMatchStart();
         readyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (status.getText().toString().equals("(Not Ready")) {
+                if (status.getText().toString().equals("(Not Ready)")) {
                     status.setText("(Ready)");
                     readyButton.setText("Away");
                 } else if (status.getText().toString().equals("(Ready)")) {
@@ -112,6 +125,71 @@ public class JoinLobby extends AppCompatActivity {
                 // TODO: send status to server
             }
         });
+        System.out.println("Before on create ends");
+    }
+    String host = "null";
+    int roomID = -1;
+    public void initiateThingsInOnCreate() {
+
+        Thread waitForRoomID = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    oos.writeObject("getRoomID");
+                    oos.flush();
+                    System.out.println("Getting room id");
+                    Object read = ois.readObject();
+                    System.out.println("object read: " + read);
+                    roomID = (int) read;
+
+                    oos.writeObject("getRoomHost");
+                    oos.flush();
+                    System.out.println("getting room host");
+                    host = (String) ois.readObject();
+
+                } catch (IOException | ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        };
+        waitForRoomID.start();
+        try {
+            waitForRoomID.join();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                roomNumber.setText(Integer.toString(roomID));
+                hostName.setText(host);
+            }
+        });
+
+
+//        new Thread() {
+//            @Override
+//            public void run() {
+//                try {
+////                    Socket socket = new Socket(InetAddress.getByName(SocketService.SERVERIP), SocketService.SERVERPORT);
+////                    ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+////                    ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+//                    oos.writeObject("getRoomHost");
+//                    oos.flush();
+//                    System.out.println("getting room host");
+//                    Object read = ois.readObject();
+//                    System.out.println("object read: " + read);
+//                    String host = (String) ois.readObject();
+//
+//                    System.out.println("Room host = " + host);
+//                    hostName.setText(host);
+//                } catch (IOException | ClassNotFoundException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }.start();
     }
 
     @Override

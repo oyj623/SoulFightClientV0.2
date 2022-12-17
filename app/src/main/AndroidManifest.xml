@@ -12,7 +12,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Soul_Fight">
-        <service android:name=".SocketService"/>
+        <service android:name=".SocketService" android:enabled="true"/>
         <activity
             android:name=".LeaderboardActivity"
             android:exported="false" />
@@ -30,9 +30,6 @@
             android:exported="false" />
         <activity
             android:name=".JoinRoom"
-            android:exported="false" />
-        <activity
-            android:name=".MainActivity2"
             android:exported="false" />
         <activity
             android:name=".PracticeSetting"

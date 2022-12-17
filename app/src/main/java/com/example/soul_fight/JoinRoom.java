@@ -14,6 +14,8 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
+import java.net.Socket;
+
 public class JoinRoom extends AppCompatActivity {
 
     private ImageButton backButton;
@@ -29,8 +31,6 @@ public class JoinRoom extends AppCompatActivity {
         public void onServiceConnected(ComponentName name, IBinder service) {
             // TODO Auto-generated method stub
             mBoundService = ((SocketService.LocalBinder)service).getService();
-            mBoundService.listenMatchStart();
-
         }
 
         @Override
