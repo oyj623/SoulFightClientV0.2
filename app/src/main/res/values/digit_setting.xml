@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="digitSetting">
+        <item>1 Digit</item>
+        <item>2 Digits</item>
+        <item>3 Digits</item>
+        <item>1 – 2 Digits</item>
+        <item>1 – 3 Digits</item>
+        <item>2 – 3 Digits</item>
+    </string-array>
+    <string-array name="flashSpeedSetting">
+        <item>Fast     (1s)</item>
+        <item>Medium (1.4s)</item>
+        <item>Slow  (1.75s)</item>
+    </string-array>
+</resources>

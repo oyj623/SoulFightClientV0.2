@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/dark_brown"
+    tools:context=".PvPActivity">
+
+    <ImageButton
+        android:id="@+id/back"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:background="@color/dark_brown"
+        android:src="@drawable/ic_baseline_arrow_back_ios_24"
+        tools:layout_editor_absoluteX="3dp"
+        tools:layout_editor_absoluteY="0dp"
+        tools:ignore="MissingConstraints" />
+
+    <TextView
+        android:id="@+id/pvp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Player Vs Player"
+        android:textColor="@color/brown"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        app:fontFamily="@font/acme"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.18" />
+
+    <Button
+        android:id="@+id/create"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/btn_bg"
+        android:elevation="20dp"
+        android:text="Create Room"
+        android:textColor="@color/dark_brown"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:backgroundTint="@color/brown"
+        app:fontFamily="@font/acme"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent=".7"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.3"
+        app:layout_constraintWidth_percent="0.6" />
+
+    <Button
+        android:id="@+id/join"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/btn_bg"
+        android:elevation="20dp"
+        android:text="Join Room"
+        android:textColor="@color/dark_brown"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:backgroundTint="@color/brown"
+        app:fontFamily="@font/acme"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent=".7"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.45"
+        app:layout_constraintWidth_percent="0.6" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
